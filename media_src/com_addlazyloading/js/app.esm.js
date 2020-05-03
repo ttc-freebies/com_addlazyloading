@@ -133,7 +133,7 @@ const fetchData = (opts) => {
                     fetchData({
                             catId: categories[requested].id,
                             from: rsp.request.to,
-                            to: step > categories[requested].articlesCount ? categories[requested].articlesCount : rsp.request.to + step,
+                            to: rsp.request.to + step > categories[requested].articlesCount ? categories[requested].articlesCount : rsp.request.to + step,
                             requested: requested,
                         },
                         requested);
