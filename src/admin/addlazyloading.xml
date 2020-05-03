@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="component" version="3.9.0" method="install">
+  <name>com_addlazyloading</name>
+  <author>Joomla! Project</author>
+  <creationDate>March 2020</creationDate>
+  <copyright>(C) 2020 Dimitrios Grammatikogiannis. All rights reserved.</copyright>
+  <license>GNU General Public License version 2 or later</license>
+  <authorEmail>d.grammatiko@gmail.com</authorEmail>
+  <authorUrl>dgrammatiko.online</authorUrl>
+  <version>1.0.0</version>
+  <description>Add lazyloading attribute to articles</description>
+  <administration>
+    <menu link='index.php?option=com_addlazyloading'>DB Lazyloading imgs</menu>
+    <files folder="admin">
+      <filename>access.xml</filename>
+      <filename>controller.php</filename>
+      <filename>addlazyloading.php</filename>
+      <folder>models</folder>
+      <folder>views</folder>
+    </files>
+  </administration>
+  <media folder="media/com_addlazyloading" destination="com_addlazyloading">
+    <folder>js</folder>
+  </media>
+</extension>
+
+
