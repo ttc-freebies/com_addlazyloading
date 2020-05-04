@@ -3,7 +3,7 @@ defined('_JEXEC') or die('Restricted access');
 
 use Joomla\CMS\Factory;
 
-class AddlazyloadingModelLazy extends JModelList {
+class AddlazyloadingModelLazy extends Joomla\CMS\MVC\Model\ListModel {
 
   /** Run Forest, run... */
   public function updatedb() {
@@ -16,8 +16,8 @@ class AddlazyloadingModelLazy extends JModelList {
     // Get the articles
     $articles = $this->getArticles($catId, $from, $to);
 
-    If (count($articles) === 0) {
-      return ['articles' => [], 'category' => ['id' => $catId, 'done' => true], 'request' => ['from' => $from, 'to' => $to, 'catId' => $catId, 'requested' => $requested] ];
+    if (count($articles) === 0) {
+      return ['articles' => [], 'category' => ['id' => $catId, 'done' => true], 'request' => ['from' => $from, 'to' => $to, 'catId' => $catId, 'requested' => $requested]];
     }
 
     $updatedArticles = [];
@@ -29,17 +29,17 @@ class AddlazyloadingModelLazy extends JModelList {
       $newFullText = $this->convert($article->full_text);
 
       if ($newIntroText !== '' || $newFullText !== '') {
-        $db = Factory::getDbo();
+        $db = $this->getDbo();
         $query = $db->getQuery(true);
 
-        $query->update($db->quoteName('#__content'))->whereIn($db->quoteName('id'), $article->id);
+        $query->update($db->qn('#__content'))->whereIn($db->qn('id'), $article->id);
 
         if ($newIntroText !== '') {
-          $query->set($db->quoteName('intro_text') . '=' . $newIntroText);
+          $query->set($db->qn('intro_text') . ' = ' . $newIntroText);
         }
 
         if ($newFullText !== '') {
-          $query->set($db->quoteName('intro_text') . '=' . $newFullText);
+          $query->set($db->qn('intro_text') . ' = ' . $newFullText);
         }
 
         $db->setQuery($query)->execute();
@@ -49,45 +49,44 @@ class AddlazyloadingModelLazy extends JModelList {
     }
 
     // Return the ids of the articles touched
-    return ['articles' => $updatedArticles, 'category' => ['id' => $catId, 'done' => true], 'request' => ['from' => $from, 'to' => $to, 'catId' => $catId, 'requested' => $requested] ];
+    return ['articles' => $updatedArticles, 'category' => ['id' => $catId, 'done' => true], 'request' => ['from' => $from, 'to' => $to, 'catId' => $catId, 'requested' => $requested]];
   }
 
   /** Get all the articles */
   private function countArticles($catId) {
-    $db = Factory::getDbo();
+    $db = $this->getDbo();
 
-    $q = $db->getQuery(true)
-      ->select("*")
-      ->from($db->qn("#__content"))
+    $query = $db->getQuery(true)
+      ->select('COUNT(id)')
+      ->from($db->qn('#__content'))
       ->where(
-        $db->qn("catid") . '=' . $db->q($catId)
+        $db->qn('catid') . ' = ' . $db->q($catId)
       );
-    $db->setQuery($q);
-    $db->getCount();
+    $db->setQuery($query);
 
-    return count($db->loadObjectList());
+    return (int) $db->loadResult();
   }
 
   /** Get all the articles */
   private function getArticles($catId, $from, $to) {
-    $db = Factory::getDbo();
+    $db = $this->getDbo();
 
-    $q = $db->getQuery(true)
-      ->select("*")
-      ->from($db->qn("#__content"))
+    $query = $db->getQuery(true)
+      ->select('*')
+      ->from($db->qn('#__content'))
       ->where(
-        $db->qn("catid") . '=' . $db->q($catId)
+        $db->qn('catid') . ' = ' . $db->q($catId)
       );
 
       if ($from > 0) {
-        $q->offset($db->q((int) $from));
+        $query->offset($db->q((int) $from));
       }
 
       if ($to > 0) {
-        $q->limit($db->q((int) $to));
+        $query->limit($db->q((int) $to));
       }
 
-    $db->setQuery($q);
+    $db->setQuery($query);
 
     return $db->loadObjectList();
   }
@@ -124,15 +123,15 @@ class AddlazyloadingModelLazy extends JModelList {
   }
 
   public function getCategories() {
-    $db = Factory::getDbo();
+    $db = $this->getDbo();
 
-    $q = $db->getQuery(true)
-      ->select("*", "extension")
-      ->from($db->qn("#__categories"))
+    $query = $db->getQuery(true)
+      ->select('*', 'extension')
+      ->from($db->qn('#__categories'))
       ->where(
-        $db->quoteName('extension') ."=" . $db -> quote('com_content')
+        $db->qn('extension') .' = ' . $db->q('com_content')
       );
-    $db->setQuery($q);
+    $db->setQuery($query);
     $db->getCount();
     $categories = $db->loadObjectList();
 
