@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/dgrammatiko/com_export2md#readme",
   "dependencies": {
-    "es6-promisify": "6.1.0",
+    "es6-promisify": "6.1.1",
     "redaxios": "0.2.0",
     "uhtml": "1.11.5"
   },
