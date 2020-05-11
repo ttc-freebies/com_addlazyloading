@@ -19,7 +19,7 @@
   "dependencies": {
     "es6-promisify": "6.1.1",
     "redaxios": "0.2.0",
-    "uhtml": "1.11.5"
+    "uhtml": "1.11.6"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "7.1.3",
