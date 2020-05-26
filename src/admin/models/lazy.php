@@ -30,7 +30,7 @@ class AddlazyloadingModelLazy extends Joomla\CMS\MVC\Model\ListModel {
     // Get the items
     $items = $this->getSelectedItems($from, $to);
 
-    if (count($items) === 0 || (($from + 1) === $itemsCount)) {
+    if (count($items) === 0) {
       return array(
         'itemsNo' => $itemsCount,
         'from' => $to,
@@ -40,8 +40,7 @@ class AddlazyloadingModelLazy extends Joomla\CMS\MVC\Model\ListModel {
     $updatedItems = $from;
 
     // Loop da loop
-    for ($i = $from; $i < ($from + $to); $i++) {
-      $item = $items[$i];
+    foreach ($items as $item) {
       $results = array();
 
       // Loop the columns
@@ -68,7 +67,14 @@ class AddlazyloadingModelLazy extends Joomla\CMS\MVC\Model\ListModel {
         $db->execute();
       }
 
-      $updatedItems = $i +1;
+      $updatedItems += 1;
+    }
+
+    if ((($from + 1) === $itemsCount)) {
+      return array(
+          'itemsNo' => $itemsCount,
+          'from' => $to,
+      );
     }
 
     // Return the ids of the items touched
