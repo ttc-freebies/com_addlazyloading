@@ -68,13 +68,13 @@ class AddlazyloadingModelLazy extends Joomla\CMS\MVC\Model\ListModel {
         $db->execute();
       }
 
-      $updatedItems = $i;
+      $updatedItems = $i +1;
     }
 
     // Return the ids of the items touched
     return [
       'itemsNo' => $updatedItems,
-      'from' => ($from -1) + $to,
+      'from' => $from,
     ];
   }
 

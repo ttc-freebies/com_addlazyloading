@@ -19,20 +19,18 @@ button.classList.remove('btn-danger');
 button.classList.add('btn-success');
 button.addEventListener('click', execute);
 
+let step = parseInt(stepElement.value, 10);
+
 stepElement.addEventListener('input', () => {
   const valid = stepElement.checkValidity();
   if (!valid) {
     button.setAttribute('disabled', '');
   } else {
     button.removeAttribute('disabled');
+    step = parseInt(stepElement.value, 10);
   }
 });
 
-let step = parseInt(stepElement.value, 10) || 1;
-
-if (step < 1) {
-  step = 1;
-}
 
 function paint(itemsNo, itemsCount) {
   if (!more) {
@@ -86,7 +84,7 @@ const fetchData = (opts) => {
           }
 
           fetchData({
-            from: rsp.from + step,
+            from: rsp.from,
             to: too,
             itemsCount: itemsCount
           });
