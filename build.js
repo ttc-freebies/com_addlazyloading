@@ -1,32 +1,30 @@
 const { copy, move, existsSync, mkdirSync, readFileSync, writeFileSync, createWriteStream } = require('fs-extra');
-const {execSync} = require('child_process');
-const {promisify} = require("es6-promisify");
+const { execSync } = require('child_process');
+const { promisify } = require("es6-promisify");
 const rimraf = require('rimraf')
 const PromiseRimraf = promisify(rimraf);
 const Archiver = require('archiver');
 const package = require('./package.json');
 const root = process.cwd();
 
-PromiseRimraf('./package').then(() => {
+PromiseRimraf('./package')
+  .then(() => {
     execSync('npx rollup --config');
-
     copy('./src/admin', './package/admin/')
-.then(()=> {
-    move('./package/admin/addlazyloading.xml', './package/addlazyloading.xml')
-    .then(() => {
-        if (!existsSync('./dist')) {
-            mkdirSync('./dist')
-        }
+      .then(() => {
+        move('./package/admin/addlazyloading.xml', './package/addlazyloading.xml')
+          .then(() => {
+            if (!existsSync('./dist')) {
+              mkdirSync('./dist')
+            }
 
-        let xml = readFileSync('./package/addlazyloading.xml', { encoding: 'utf8' });
-        xml = xml.replace('{{version}}', package.version)
-      
-        writeFileSync('./package/addlazyloading.xml', xml, { encoding: 'utf8' });
-
-        makePackage();
-    })
-});
-});
+            let xml = readFileSync('./package/addlazyloading.xml', { encoding: 'utf8' });
+            xml = xml.replace('{{version}}', package.version)
+            writeFileSync('./package/addlazyloading.xml', xml, { encoding: 'utf8' });
+            makePackage();
+          })
+      });
+  });
 
 const makePackage = () => {
   // Package it
@@ -63,5 +61,3 @@ const makePackage = () => {
 
   archive.finalize();
 };
-
-

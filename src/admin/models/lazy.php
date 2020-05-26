@@ -1,90 +1,100 @@
 <?php
-defined('_JEXEC') or die('Restricted access');
+defined('_JEXEC') || die('Restricted access');
 
 use Joomla\CMS\Factory;
 
 class AddlazyloadingModelLazy extends Joomla\CMS\MVC\Model\ListModel {
+  private $table;
+  private $columns;
+  private $id;
+
+  public function __construct($config = array()) {
+    $params = \Joomla\CMS\Component\ComponentHelper::getParams('com_addlazyloading');
+
+    $this->table = $params->get('table', 'content');
+    $this->id = $params->get('id', 'id');
+    $cols = $params->get('columns', 'introtext,fulltext');
+    $this->columns = explode(',', $cols);
+
+    parent::__construct($config);
+  }
 
   /** Run Forest, run... */
   public function updatedb() {
     $input = Factory::getApplication()->input->json;
-    $catId = $input->getInt('catId');
-    $from = $input->getInt('from');
-    $to = $input->getInt('to');
-    $requested = $input->getInt('requested');
+    $from = $input->getInt('from', 1);
+    $to = $input->getInt('to', 1);
 
-    // Get the articles
-    $articles = $this->getArticles($catId, $from, $to);
+    $itemsCount = $input->getInt('itemsCount', 0);
 
-    if (count($articles) === 0) {
-      return ['articles' => [], 'category' => ['id' => $catId, 'done' => true], 'request' => ['from' => $from, 'to' => $to, 'catId' => $catId, 'requested' => $requested]];
+    // Get the items
+    $items = $this->getSelectedItems($from, $to);
+
+    if (count($items) === 0 || (($from + 1) === $itemsCount)) {
+      return array(
+        'itemsNo' => $itemsCount,
+        'from' => $to,
+      );
     }
 
-    $updatedArticles = [];
+    $updatedItems = $from;
 
     // Loop da loop
-    for ($i = $from; $i < $to; $i++) {
-      $article = $articles[$i];
-      $newIntroText = $this->convert($article->intro_text);
-      $newFullText = $this->convert($article->full_text);
+    for ($i = $from; $i < ($from + $to); $i++) {
+      $item = $items[$i];
+      $results = array();
 
-      if ($newIntroText !== '' || $newFullText !== '') {
+      // Loop the columns
+      foreach($this->columns as $col) {
+        if ($item->{$col}) {
+          $result = $this->convert($item->{$col});
+          $results[$col] = $result;
+        }
+      }
+
+      if (count($results) > 0) {
         $db = $this->getDbo();
         $query = $db->getQuery(true);
 
-        $query->update($db->qn('#__content'))->whereIn($db->qn('id'), $article->id);
+        $fields = array();
 
-        if ($newIntroText !== '') {
-          $query->set($db->qn('intro_text') . ' = ' . $newIntroText);
+        foreach( $results as $key => $value ) {
+          $fields[] = $db->quoteName($key) . ' = ' . $db->quote($value);
         }
 
-        if ($newFullText !== '') {
-          $query->set($db->qn('intro_text') . ' = ' . $newFullText);
-        }
+        $query->update($db->quoteName('#__' . $this->table))->set($fields)->where($db->quoteName($this->id) . ' = ' . $db->quote($item->id));
 
-        $db->setQuery($query)->execute();
-
-        $updatedArticles[] = $article->id;
+        $db->setQuery($query);
+        $db->execute();
       }
+
+      $updatedItems = $i;
     }
 
-    // Return the ids of the articles touched
-    return ['articles' => $updatedArticles, 'category' => ['id' => $catId, 'done' => true], 'request' => ['from' => $from, 'to' => $to, 'catId' => $catId, 'requested' => $requested]];
+    // Return the ids of the items touched
+    return [
+      'itemsNo' => $updatedItems,
+      'from' => ($from -1) + $to,
+    ];
   }
 
-  /** Get all the articles */
-  private function countArticles($catId) {
-    $db = $this->getDbo();
-
-    $query = $db->getQuery(true)
-      ->select('COUNT(id)')
-      ->from($db->qn('#__content'))
-      ->where(
-        $db->qn('catid') . ' = ' . $db->q($catId)
-      );
-    $db->setQuery($query);
-
-    return (int) $db->loadResult();
-  }
-
-  /** Get all the articles */
-  private function getArticles($catId, $from, $to) {
+  /** Get all the items */
+  public function getSelectedItems($from, $to) {
     $db = $this->getDbo();
 
     $query = $db->getQuery(true)
       ->select('*')
-      ->from($db->qn('#__content'))
-      ->where(
-        $db->qn('catid') . ' = ' . $db->q($catId)
-      );
+      ->from($db->quoteName('#__' .$this->table));
 
-      if ($from > 0) {
-        $query->offset($db->q((int) $from));
-      }
+    $offset = 0;
 
-      if ($to > 0) {
-        $query->limit($db->q((int) $to));
-      }
+    if ($from > 0) {
+      $offset = (int) $from;
+    }
+
+    $limit = (int) $to;
+
+    $query->setLimit($limit, $offset);
 
     $db->setQuery($query);
 
@@ -99,7 +109,7 @@ class AddlazyloadingModelLazy extends Joomla\CMS\MVC\Model\ListModel {
    * @return  string  Always returns void or true
    *
    * @since   1.0.0
-   * 
+   *
    * Coded by @	zero-24: https://github.com/joomla/joomla-cms/pull/28838
    */
   private function convert($content) {
@@ -111,34 +121,38 @@ class AddlazyloadingModelLazy extends Joomla\CMS\MVC\Model\ListModel {
       return '';
     }
 
+    $responsivePlugin = false;
+    if (JPluginHelper::isEnabled('content', 'responsive')) {
+      JLoader::register('Ttc\Freebies\Responsive\Helper', JPATH_ROOT . '/plugins/content/responsive/helper.php', true);
+      $responsivePlugin = true;
+    }
+
     foreach ($matches[0] as $image) {
       // Make sure we have a src but no loading attribute
       if (strpos($image, ' src=') !== false && strpos($image, ' loading=') === false) {
         $lazyloadImage = str_replace('<img ', '<img loading="lazy" ', $image);
         $content = str_replace($image, $lazyloadImage, $content);
       }
+
+      if ($responsivePlugin) {
+        $helper = new \Ttc\Freebies\Responsive\Helper;
+        $helper->transformImage($image, array(200, 320, 480, 768, 992, 1200, 1600, 1920));
+      }
     }
 
     return $content;
   }
 
-  public function getCategories() {
+  /** Get all the items */
+  public function countItems() {
     $db = $this->getDbo();
 
     $query = $db->getQuery(true)
-      ->select('*', 'extension')
-      ->from($db->qn('#__categories'))
-      ->where(
-        $db->qn('extension') .' = ' . $db->q('com_content')
-      );
+      ->select('COUNT(' . $db->quoteName($this->id) . ')')
+      ->from($db->qn('#__' .$this->table));
+
     $db->setQuery($query);
-    $db->getCount();
-    $categories = $db->loadObjectList();
 
-    foreach ($categories as $category) {
-      $category->articlesCount = $this->countArticles($category->id, true);
-    }
-
-    return $categories;
+    return (int) $db->loadResult();
   }
 }

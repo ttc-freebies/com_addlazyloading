@@ -1,5 +1,5 @@
 <?php
-defined('_JEXEC') or die('Restricted access');
+defined('_JEXEC') || die('Restricted access');
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
@@ -25,16 +25,17 @@ class AddlazyloadingViewLazy extends Joomla\CMS\MVC\View\HtmlView {
     Factory::getDocument()->setTitle('Add the loading=lazy attribute to all Articles images [intro+full]');
     $this->addToolbar();
 
-    $this->categories = $this->getModel()->getCategories();
-
     // Display the template
     parent::display($tpl);
   }
 
-
   protected function addToolbar() {
+    $user  = JFactory::getUser();
     ToolbarHelper::title('Do the DB magic', 'info-2 systeminfo');
     $bar = Toolbar::getInstance('toolbar');
-    $bar->appendButton('Custom', '<button class="btn btn-danger" disabled id="lazyLoadingButton" data-url="' . Uri::root(false) . '" data-records="' . Uri::root(false) . '" data-token="' . Session::getFormToken() . '" >♻︎ Update Articles</button>', 'Update Articles', 'updateArticles');
+    $bar->appendButton('Custom', '<button class="btn btn-danger" disabled id="lazyLoadingButton" data-url="' . Uri::root(false) . '" data-items-count="' . $this->getModel()->countItems() . '" data-token="' . Session::getFormToken() . '" >♻︎ Update Articles</button>', 'Update Articles', 'updateArticles');
+    if ($user->authorise('core.admin', 'com_addlazyloading') || $user->authorise('core.options', 'com_addlazyloading')) {
+      ToolbarHelper::preferences('com_addlazyloading');
+    }
   }
 }
