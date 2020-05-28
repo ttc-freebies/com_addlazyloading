@@ -14,8 +14,8 @@ PromiseRimraf('./package')
       .then(() => {
         move('./package/admin/addlazyloading.xml', './package/addlazyloading.xml')
           .then(() => {
-            if (!existsSync('./dist')) {
-              mkdirSync('./dist')
+            if (!existsSync('./docs')) {
+              mkdirSync('./docs')
             }
 
             let xml = readFileSync('./package/addlazyloading.xml', { encoding: 'utf8' });
@@ -28,13 +28,13 @@ PromiseRimraf('./package')
 
 const makePackage = () => {
   // Package it
-  const output = createWriteStream(`${root}/dist/com_addlazyloading_${package.version}.zip`);
+  const output = createWriteStream(`${root}/docs/com_addlazyloading_${package.version}.zip`);
   let archive = Archiver('zip', {
     zlib: { level: 9 }
   });
 
   output.on('close', function () {
-    console.log(`dist/com_addlazyloading_${package.version}.zip created: ${archive.pointer()} total bytes`);
+    console.log(`docs/com_addlazyloading_${package.version}.zip created: ${archive.pointer()} total bytes`);
   });
 
   output.on('end', function () {
