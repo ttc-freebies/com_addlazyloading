@@ -22,7 +22,7 @@
     "uhtml": "2.0.1"
   },
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "8.1.0",
+    "@rollup/plugin-node-resolve": "8.4.0",
     "archiver": "4.0.2",
     "fs-extra": "9.0.1",
     "rimraf": "3.0.2",
