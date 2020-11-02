@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "8.1.0",
-    "archiver": "4.0.1",
+    "archiver": "4.0.2",
     "fs-extra": "9.0.1",
     "rimraf": "3.0.2",
     "rollup": "2.21.0",
