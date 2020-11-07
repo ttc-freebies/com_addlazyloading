@@ -5,39 +5,43 @@ use Joomla\CMS\Factory;
 
 class AddlazyloadingModelLazy extends Joomla\CMS\MVC\Model\ListModel {
   private $table;
-  private $columns;
+  private $tablePointer;
   private $id;
+  private $columns;
+  private $from;
+  private $to;
+  private $itemsCount;
+  private $total;
 
   public function __construct($config = array()) {
-    $params = \Joomla\CMS\Component\ComponentHelper::getParams('com_addlazyloading');
-
-    $this->table = $params->get('table', 'content');
-    $this->id = $params->get('id', 'id');
-    $cols = $params->get('columns', 'introtext,fulltext');
-    $this->columns = explode(',', $cols);
+    // Get the data from the input
+    $input = Factory::getApplication()->input->json;
+    $this->table = $input->get('table', 'content');
+    $this->tablePointer = $input->getInt('tablePointer', 0);
+    $this->id = $input->get('id', 'id');
+    $this->columns = $input->get('columns', '');
+    $this->from = $input->getInt('from', 1);
+    $this->to = $input->getInt('to', 1);
+    $this->itemsCount = $input->getInt('itemsCount', 0);
+    $this->total = $input->getInt('total', 0);
 
     parent::__construct($config);
   }
 
   /** Run Forest, run... */
   public function updatedb() {
-    $input = Factory::getApplication()->input->json;
-    $from = $input->getInt('from', 1);
-    $to = $input->getInt('to', 1);
-
-    $itemsCount = $input->getInt('itemsCount', 0);
-
-    // Get the items
-    $items = $this->getSelectedItems($from, $to);
+    $items = $this->getSelectedItems();
 
     if (count($items) === 0) {
       return array(
-        'itemsNo' => $itemsCount,
-        'from' => $to,
+        'tablePointer' => $this->tablePointer,
+        'itemsCount' => $this->itemsCount,
+        'from' => $this->to,
+        'total' => $this->total,
       );
     }
 
-    $updatedItems = $from;
+    $updatedItems = $this->from;
 
     // Loop da loop
     foreach ($items as $item) {
@@ -46,7 +50,7 @@ class AddlazyloadingModelLazy extends Joomla\CMS\MVC\Model\ListModel {
       // Loop the columns
       foreach($this->columns as $col) {
         if ($item->{$col}) {
-          $result = $this->convert($item->{$col});
+          $result = $this->convertTextareaImages($item->{$col});
           $results[$col] = $result;
         }
       }
@@ -70,35 +74,39 @@ class AddlazyloadingModelLazy extends Joomla\CMS\MVC\Model\ListModel {
       $updatedItems += 1;
     }
 
-    if ((($from + 1) === $itemsCount)) {
+    if ((($this->from + 1) === $this->itemsCount)) {
       return array(
-          'itemsNo' => $itemsCount,
-          'from' => $to,
+        'tablePointer' => $this->tablePointer,
+        'itemsCount' => $this->itemsCount,
+        'from' => $this->to,
+        'total' => $this->total,
       );
     }
 
     // Return the ids of the items touched
     return [
-      'itemsNo' => $updatedItems,
-      'from' => $from,
+      'tablePointer' => $this->tablePointer,
+      'itemsCount' => $this->updatedItems,
+      'from' => $this->from,
+      'total' => $this->total,
     ];
   }
 
-  /** Get all the items */
-  public function getSelectedItems($from, $to) {
+  /** Get a range of items from the table */
+  public function getSelectedItems() {
     $db = $this->getDbo();
 
     $query = $db->getQuery(true)
       ->select('*')
-      ->from($db->quoteName('#__' .$this->table));
+      ->from($db->quoteName('#__' . $this->table));
 
     $offset = 0;
 
-    if ($from > 0) {
-      $offset = (int) $from;
+    if ((int) $this->from > 0) {
+      $offset = (int) $this->from;
     }
 
-    $limit = (int) $to;
+    $limit = (int) $this->to;
 
     $query->setLimit($limit, $offset);
 
@@ -118,7 +126,7 @@ class AddlazyloadingModelLazy extends Joomla\CMS\MVC\Model\ListModel {
    *
    * Coded by @	zero-24: https://github.com/joomla/joomla-cms/pull/28838
    */
-  private function convert($content) {
+  private function convertTextareaImages($content) {
     if (strpos($content, '<img') === false) {
       return '';
     }
@@ -127,38 +135,61 @@ class AddlazyloadingModelLazy extends Joomla\CMS\MVC\Model\ListModel {
       return '';
     }
 
-    $responsivePlugin = false;
-    if (JPluginHelper::isEnabled('content', 'responsive')) {
-      JLoader::register('Ttc\Freebies\Responsive\Helper', JPATH_ROOT . '/plugins/content/responsive/helper.php', true);
-      $responsivePlugin = true;
-    }
-
     foreach ($matches[0] as $image) {
       // Make sure we have a src but no loading attribute
       if (strpos($image, ' src=') !== false && strpos($image, ' loading=') === false) {
         $lazyloadImage = str_replace('<img ', '<img loading="lazy" ', $image);
         $content = str_replace($image, $lazyloadImage, $content);
       }
-
-      if ($responsivePlugin) {
-        $helper = new \Ttc\Freebies\Responsive\Helper;
-        $helper->transformImage($image, array(200, 320, 480, 768, 992, 1200, 1600, 1920));
-      }
     }
 
     return $content;
   }
 
-  /** Get all the items */
-  public function countItems() {
+  /** Return the tables/num of rows object */
+  public function getTables() {
+    $output = new \stdClass;
+
+    try {
+      $tablesRaw = file_get_contents(__DIR__ . '/tables.json');
+    } catch (\Exception $e) {
+      throw new \Exception('File is missing');
+    }
+
+    try {
+    $this->tables = json_decode($tablesRaw);
+    } catch (\Exception $e) {
+      throw new \Exception('Couldn\'t parse the JSON file');
+    }
+
+    foreach($this->tables as $key => $value) {
+      $totalRows = $this->countItems($this->tables->{$key}->id, $key);
+
+      if ($totalRows !== false && $totalRows > 0) {
+        $output->{$key} = $totalRows;
+      }
+    }
+
+    return $output;
+  }
+
+  /** Return the num of rows of a table */
+  public function countItems($id, $table) {
+    $result = false;
     $db = $this->getDbo();
 
     $query = $db->getQuery(true)
-      ->select('COUNT(' . $db->quoteName($this->id) . ')')
-      ->from($db->qn('#__' .$this->table));
+      ->select('COUNT(' . $db->quoteName($id) . ')')
+      ->from($db->qn('#__' . $table));
 
     $db->setQuery($query);
 
-    return (int) $db->loadResult();
+    try {
+        $result = (int) $db->loadResult();
+    } catch (Exception $e) {
+      // The table/id combo doesn't exist
+    }
+
+    return $result;
   }
 }

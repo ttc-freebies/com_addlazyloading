@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
 	<fieldset name="component" label="Settings">
-        <field
+		<field
 			name="table"
 			type="text"
 			label="Table that conversions should be applied"
@@ -21,8 +21,8 @@
 		<field
 			name="id"
 			type="text"
-            label="The primary key column name"
-            description="Type primary key column name that the app should use for targeting each row in the DB"
+			label="The primary key column name"
+			description="Type primary key column name that the app should use for targeting each row in the DB"
 			default="id"
 			>
 		</field>

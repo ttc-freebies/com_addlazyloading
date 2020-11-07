@@ -1,0 +1,37 @@
+{
+  "content": {
+    "jsonEncoded": [
+      {
+        "column": "images",
+        "fields": ["image_intro", "image_fulltext"]
+      }
+    ],
+    "fields": [],
+    "contents": [
+      "introtext",
+      "fulltext"
+    ],
+    "id": "id"
+  },
+  "categories": {
+    "jsonEncoded": [
+      {
+        "column": "params",
+        "fields": [
+          "image"
+        ]
+      }
+    ],
+    "fields": [],
+    "contents": [
+      "description"
+    ],
+    "id": "id"
+  },
+  "contact_details": {
+    "jsonEncoded": [],
+    "fields": ["image"],
+    "contents": [],
+    "id": "id"
+  }
+}

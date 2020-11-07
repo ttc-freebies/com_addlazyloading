@@ -5,8 +5,25 @@ const button = document.getElementById('lazyLoadingButton');
 const title = document.getElementById('lazyLoadingTitle');
 const appContainer = document.getElementById('lazyLoadingApp');
 const stepElement = document.getElementById('step');
+const jsonEl = document.getElementById('com_addlazyloading_state');
+let counts;
 
-if (!button || !appContainer || !button.dataset.url || !stepElement) {
+try {
+  counts = JSON.parse(jsonEl.innerHTML)
+  console.log('totals: ', counts)
+} catch (err) {
+  throw Error('Invalid Json...');
+}
+
+const state = {};
+
+for (const count in counts) {
+  state[count] = 0;
+}
+
+console.log('Initial state: ', state);
+
+if (!button || !appContainer || !button.dataset.url || !stepElement || !jsonEl || !state) {
   throw Error('Ooops the markup is meshed up...')
 }
 
@@ -31,7 +48,6 @@ stepElement.addEventListener('input', () => {
   }
 });
 
-
 function paint(itemsNo, itemsCount) {
   if (!more) {
     render(appContainer, html`
@@ -40,7 +56,6 @@ function paint(itemsNo, itemsCount) {
   } else {
     render(appContainer, html`<h2>All Done here. Your DB is updated 🎉</h2>`);
   }
-
 }
 
 function execute() {
@@ -51,10 +66,13 @@ function execute() {
   button.setAttribute('disabled', '');
   stepElement.setAttribute('disabled', '');
 
+  const firstTable = Object.keys(counts)[0]
   fetchData({
+    tablePointer: 0,
     from: 0,
     to: step,
-    itemsCount: itemsCount
+    itemsCount: itemsCount,
+    total: counts[firstTable],
   });
 }
 
@@ -71,7 +89,9 @@ const fetchData = (opts) => {
         paint(rsp.itemsNo, itemsCount);
 
         if (rsp.itemsNo === itemsCount) {
-          more = true; // Done
+
+          // const currentTable = Object.keys(counts)[0]
+          // more = true; // Done
           paint(rsp.itemsNo, itemsCount);
         } else {
           paint(rsp.itemsNo, itemsCount);

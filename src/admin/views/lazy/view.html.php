@@ -22,7 +22,7 @@ class AddlazyloadingViewLazy extends Joomla\CMS\MVC\View\HtmlView {
       return false;
     }
 
-    Factory::getDocument()->setTitle('Add the loading=lazy attribute to all Articles images [intro+full]');
+    Factory::getDocument()->setTitle('Image lazyloading migration');
     $this->addToolbar();
 
     // Display the template
@@ -31,9 +31,9 @@ class AddlazyloadingViewLazy extends Joomla\CMS\MVC\View\HtmlView {
 
   protected function addToolbar() {
     $user  = JFactory::getUser();
-    ToolbarHelper::title('Do the DB magic', 'info-2 systeminfo');
+    ToolbarHelper::title('Do the migration', 'info-2 systeminfo');
     $bar = Toolbar::getInstance('toolbar');
-    $bar->appendButton('Custom', '<button class="btn btn-danger" disabled id="lazyLoadingButton" data-url="' . Uri::root(false) . '" data-items-count="' . $this->getModel()->countItems() . '" data-token="' . Session::getFormToken() . '" >♻︎ Update Articles</button>', 'Update Articles', 'updateArticles');
+    $bar->appendButton('Custom', '<button class="btn btn-danger" disabled id="lazyLoadingButton" data-url="' . Uri::root(false) . '" data-token="' . Session::getFormToken() . '" >♻︎ Update Items</button>', 'Update Items', 'updateItems');
     if ($user->authorise('core.admin', 'com_addlazyloading') || $user->authorise('core.options', 'com_addlazyloading')) {
       ToolbarHelper::preferences('com_addlazyloading');
     }

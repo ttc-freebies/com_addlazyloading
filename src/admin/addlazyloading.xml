@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="component" version="3.9.0" method="install">
   <name>com_addlazyloading</name>
-  <author>Joomla! Project</author>
+  <author>Dimitrios Grammatikogiannis</author>
   <creationDate>March 2020</creationDate>
   <copyright>(C) 2020 Dimitrios Grammatikogiannis. All rights reserved.</copyright>
   <license>GNU General Public License version 2 or later</license>
