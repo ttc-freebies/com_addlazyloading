@@ -1,1 +1,0 @@
-alert('Please use a newer browser');

@@ -1,5 +1,5 @@
 import axios from 'redaxios/dist/redaxios.module'; //'https://unpkg.com/redaxios?module';
-import { render, html } from 'uhtml'; //'https://unpkg.com/uhtml?module';
+import { render, html } from 'uhtml/esm/index'; //'https://unpkg.com/uhtml?module';
 
 const button = document.getElementById('lazyLoadingButton');
 const title = document.getElementById('lazyLoadingTitle');

@@ -3,6 +3,7 @@ import resolve from '@rollup/plugin-node-resolve';
 import minifyHTML from 'rollup-plugin-minify-html-literals';
 import babel from '@rollup/plugin-babel';
 import { terser } from "rollup-plugin-terser";
+import commonjs from '@rollup/plugin-commonjs';
 
 export default [{
   input: 'media_src/com_addlazyloading/js/app.esm.js',
@@ -16,19 +17,21 @@ export default [{
   output: [
     { file: 'package/media/com_addlazyloading/js/app.esm.js', format: 'es' }
   ]
-},{
+  },{
     input: 'media_src/com_addlazyloading/js/app.esm.js',
-      plugins: [
-    resolve(),
+    plugins: [
+    resolve({
+      browser: true
+    }),
     babel({
         babelrc: false,
-        babelHelpers: 'bundled',
-        exclude: [/\/core-js\//],
+        babelHelpers: 'runtime',
+        exclude: 'node_modules/**',
+        plugins: ['@babel/plugin-transform-runtime'],
         presets: [
           [
             "@babel/preset-env",
             {
-
               useBuiltIns: 'usage',
               corejs: '3.0.0',
               "targets": {
@@ -38,14 +41,14 @@ export default [{
                   "IE 11"
                 ]
               },
-              "loose": true,
-              "modules": false,
-              "useBuiltIns": 'usage',
-              // debug: true
-            }
+              debug: true,
+            },
           ]
-        ]
+        ],
       }),
+    commonjs({
+      include: 'node_modules/**'
+    }),
     minifyHTML(),
     terser(),
   ],
