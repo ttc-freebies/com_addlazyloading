@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/dgrammatiko/com_export2md#readme",
   "dependencies": {
-    "redaxios": "0.4.1",
+    "redaxios": "0.5.1",
     "uhtml": "2.8.0"
   },
   "devDependencies": {
